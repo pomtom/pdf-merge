@@ -1,253 +1,99 @@
-# PDF Merger & Compressor
+# PDF Studio
 
-A Python application that merges multiple PDF files into a single document and compresses it for email sending. This tool is completely free to use and follows Python best practices.
+A local web application for working with PDF files: merge many PDFs into one,
+split a PDF into parts, and extract selected pages — with page-level control
+(reorder files, rotate pages, delete pages) and live page previews.
+
+Everything runs on your machine. The server binds to `127.0.0.1` only, no
+files ever leave your computer, and original files are never modified.
+
+Built as a FastAPI backend + vanilla-JS single-page frontend — no build step.
 
 ## Features
 
-✅ **Merge Multiple PDFs**: Combine any number of PDF files into a single document  
-✅ **Email-Ready Compression**: Automatically compress merged PDFs for email attachment  
-✅ **Command Line Interface**: Full CLI support with extensive options  
-✅ **Graphical User Interface**: Easy-to-use GUI for non-technical users  
-✅ **Smart Validation**: Validates PDF files before processing  
-✅ **Detailed Logging**: Comprehensive logging for troubleshooting  
-✅ **Cross-Platform**: Works on Windows, macOS, and Linux  
-✅ **Free & Open Source**: No licensing fees or restrictions  
+- **Merge** any number of PDFs, in any order, with drag-and-drop reordering
+- **Page-level editing** before merging: select, rotate (90/180/270), delete pages
+- **Merge only selected pages** across files
+- **Split** a PDF by page ranges (`1-3, 7, 9-12`), into fixed-size chunks, or one file per page
+- **Extract** selected pages into a new PDF
+- **Page previews**: lazily rendered thumbnails, cached on disk — a 500-page file stays fast
+- **Large-file friendly**: uploads stream to disk in 1 MB chunks; no size limits
+- **Background processing** with live progress — the UI never freezes
+- **Light & dark mode**, follows your OS preference until you toggle manually
+- Corrupt and password-protected files are rejected cleanly, never crash a batch
 
-## Requirements
+## Quick start
 
-- Python 3.7 or higher
-- Required packages (see installation)
+Double-click **`run.bat`** (or run `.\run.ps1` in PowerShell).
 
-## Installation
+It creates a virtual environment on first run (using [uv](https://docs.astral.sh/uv/)
+if available, otherwise `py`/`python`), installs dependencies, starts the
+server and opens `http://127.0.0.1:8000` in your browser.
 
-1. **Clone or download this repository**:
-   ```bash
-   git clone <repository-url>
-   cd pdf-merge
-   ```
+Manual equivalent:
 
-2. **Install required packages**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   Or install packages individually:
-   ```bash
-   pip install PyPDF2 reportlab tqdm
-   ```
+```powershell
+uv venv .venv --python 3.12
+uv pip install -r requirements.txt --python .venv\Scripts\python.exe
+.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
 
 ## Usage
 
-### Command Line Interface (CLI)
+1. **Add files** — drag PDFs anywhere onto the window, or click *+ Add PDFs*.
+2. **Arrange** — drag the `⠿` handle to reorder files; the merge follows this order.
+3. **Edit pages** — click a file to open its page grid. Click a page to select it
+   (Shift-click selects a range), `⟳` rotates, `🗑` deletes/restores.
+4. **Act** — *Merge* combines everything (or only selected pages), *Split* divides
+   the active file, *Extract* pulls the selected pages into a new PDF.
+5. **Download** — finished jobs show a download link in the toast at the bottom right.
 
-#### Basic Usage
-```bash
-# Merge multiple PDF files
-python pdf_merger.py file1.pdf file2.pdf file3.pdf
+## Where data lives
 
-# Use wildcards to select all PDFs in current directory
-python pdf_merger.py *.pdf
+Uploads, thumbnails and outputs are stored per session under
+`%TEMP%\pdf-studio\` (override with the `PDF_STUDIO_DATA` environment
+variable). Sessions untouched for 24 hours are cleaned up automatically
+(`PDF_STUDIO_TTL_HOURS` to change). A debug log is written to
+`pdf-studio.log` in the same directory.
 
-# Merge PDFs from a specific folder
-python pdf_merger.py folder/*.pdf
-```
-
-#### Advanced Options
-```bash
-# Specify custom output filename
-python pdf_merger.py *.pdf --output "monthly_reports"
-
-# Set custom output directory
-python pdf_merger.py *.pdf --output-dir "my_output"
-
-# Set email size limit (default: 25MB)
-python pdf_merger.py *.pdf --email-limit 20
-
-# Combine all options
-python pdf_merger.py folder/*.pdf --output "Q4_reports" --output-dir "reports" --email-limit 30
-```
-
-#### Command Line Help
-```bash
-python pdf_merger.py --help
-```
-
-### Graphical User Interface (GUI)
-
-For users who prefer a graphical interface:
-
-```bash
-python pdf_merger_gui.py
-```
-
-#### GUI Features:
-- **Drag & Drop Support**: Add files by selecting them through file browser
-- **Folder Import**: Add all PDFs from a selected folder
-- **Live Log Output**: See processing progress in real-time
-- **Settings Panel**: Configure output directory, filename, and email size limit
-- **File Management**: Add, remove, or clear PDF files from the list
-
-## Output
-
-The application generates two files:
-
-1. **Merged PDF**: A single PDF containing all input files
-   - Example: `merged_pdf_20251202_143055.pdf`
-
-2. **Compressed ZIP**: Email-ready compressed version
-   - Example: `merged_pdf_20251202_143055_compressed.zip`
-
-## Configuration
-
-### Email Size Limits
-
-Common email provider limits:
-- **Gmail**: 25MB
-- **Outlook/Hotmail**: 20MB
-- **Yahoo**: 25MB
-- **Corporate email**: Often 10-20MB
-
-Adjust the `--email-limit` parameter accordingly.
-
-### Output Directory Structure
+## Project structure
 
 ```
-output/
-├── merged_pdf_20251202_143055.pdf
-├── merged_pdf_20251202_143055_compressed.zip
-└── pdf_merger_20251202_143055.log
+app/
+  main.py            app factory, static serving, startup cleanup
+  config.py          settings (env-var overridable)
+  models.py          API request/response schemas
+  errors.py          error envelope: {"error": {code, message, detail}}
+  api/               REST routers: sessions, files, jobs, outputs
+  services/          workspace (session state), jobs (thread pool), thumbnails (cache)
+  pdf/               engine (merge/split/extract), info (probing), render (pypdfium2)
+static/              frontend SPA (vanilla JS modules, CSS design tokens)
+scripts/
+  generate_test_pdfs.py   builds sample PDFs (numbered pages, corrupt, encrypted)
 ```
 
-## Examples
+Key libraries: [pypdf](https://pypdf.readthedocs.io/) for PDF structure
+operations, [pypdfium2](https://pypdfium2.readthedocs.io/) (Chromium's PDFium)
+for page rendering, FastAPI + uvicorn for the server. No Node, no build step —
+the only vendored JS dependency is SortableJS for drag-reorder.
 
-### Example 1: Basic Merge
-```bash
-python pdf_merger.py report1.pdf report2.pdf report3.pdf
-```
-**Output**: 
-- `output/merged_pdf_[timestamp].pdf`
-- `output/merged_pdf_[timestamp]_compressed.zip`
+## Notes & limits
 
-### Example 2: Custom Output
-```bash
-python pdf_merger.py *.pdf --output "quarterly_report" --output-dir "reports"
-```
-**Output**: 
-- `reports/quarterly_report.pdf`
-- `reports/quarterly_report_compressed.zip`
-
-### Example 3: Large File Handling
-```bash
-python pdf_merger.py large_files/*.pdf --email-limit 15
-```
-**Result**: Warns if compressed file exceeds 15MB limit
+- Merging builds the output in memory; practical ceiling is a few hundred MB
+  of output on a typical desktop.
+- Password-protected inputs are rejected (owner-locked PDFs that open without
+  a password are accepted transparently). Password support is planned.
+- Windows is the primary target; the app itself is cross-platform Python.
 
 ## Troubleshooting
 
-### Common Issues
+- **Port already in use** — set `PDF_STUDIO_PORT` or stop the other process.
+- **Pillow fails to install** on a very new Python: use Python 3.12
+  (`uv venv .venv --python 3.12`), which has wheels for every dependency.
+- Check `%TEMP%\pdf-studio\pdf-studio.log` for details on any error.
 
-1. **"Module not found" Error**:
-   ```bash
-   pip install PyPDF2 reportlab
-   ```
+## Roadmap (Phase 2)
 
-2. **"Permission denied" Error**:
-   - Ensure output directory is writable
-   - Close any open PDF files before processing
-
-3. **"Invalid PDF" Warnings**:
-   - Check that files are valid PDFs
-   - Some files may be corrupted or password-protected
-
-4. **Large file sizes**:
-   - Consider reducing PDF quality before merging
-   - Use cloud storage services for files > 25MB
-
-### Logging
-
-Check the log file in the output directory for detailed information:
-```
-output/pdf_merger_[timestamp].log
-```
-
-### Performance Tips
-
-- **Close other applications** when processing large files
-- **Use SSD storage** for better performance
-- **Process files in smaller batches** if memory is limited
-
-## Technical Details
-
-### Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| PyPDF2 | 3.0.1 | PDF manipulation and merging |
-| reportlab | 4.0.4 | PDF creation and manipulation |
-| tqdm | 4.66.1 | Progress bars (optional) |
-
-### File Formats Supported
-
-- **Input**: PDF files only
-- **Output**: 
-  - PDF (merged document)
-  - ZIP (compressed for email)
-
-### Compression Algorithm
-
-- Uses ZIP compression with maximum compression level (9)
-- Typical compression ratio: 10-30% size reduction
-- Maintains PDF quality while reducing file size
-
-## Development
-
-### Code Structure
-
-```
-pdf-merge/
-├── pdf_merger.py          # Main CLI application
-├── pdf_merger_gui.py      # GUI application
-├── requirements.txt       # Dependencies
-└── README.md             # Documentation
-```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-### Code Style
-
-- Follows PEP 8 Python style guide
-- Type hints for better code documentation
-- Comprehensive error handling and logging
-- Modular design for easy maintenance
-
-## License
-
-This project is free and open source. You can use, modify, and distribute it freely.
-
-## Support
-
-For issues or questions:
-
-1. Check the troubleshooting section
-2. Review log files for error details
-3. Create an issue on the repository
-4. Provide sample files if possible (remove sensitive content)
-
-## Version History
-
-- **v1.0.0** (December 2025)
-  - Initial release
-  - CLI and GUI interfaces
-  - PDF merging and compression
-  - Cross-platform support
-  - Comprehensive logging
-
----
-
-**Made with ❤️ by GitHub Copilot**
+Bookmarks/outline on merge · page-number stamping · password-protect output
+(AES-256) · pure-Python output compression · metadata editing · text search
+across files · batch operations.

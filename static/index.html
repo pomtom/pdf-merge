@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%234f6df5'/%3E%3Ctext x='12' y='16.5' font-family='Arial' font-weight='bold' font-size='10' fill='white' text-anchor='middle'%3EPDF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script>
+  // Apply theme before first paint to avoid a flash of the wrong theme.
+  (function () {
+    var t = localStorage.getItem("theme");
+    if (t !== "light" && t !== "dark") {
+      t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">PDF</div>
+    <div>
+      <h1>PDF Studio</h1>
+      <p class="brand-sub">Merge &middot; Split &middot; Extract</p>
+    </div>
+  </div>
+  <nav class="topbar-actions">
+    <button id="btn-merge" class="btn btn-primary" disabled>
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M2 3h5l1.5 2H14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+      Merge
+    </button>
+    <button id="btn-split" class="btn" disabled>Split</button>
+    <button id="btn-extract" class="btn" disabled>Extract</button>
+    <span class="topbar-sep"></span>
+    <button id="btn-theme" class="btn btn-icon" title="Toggle light/dark theme" aria-label="Toggle theme"></button>
+  </nav>
+</header>
+
+<main class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <h2>Files</h2>
+      <button id="btn-add" class="btn btn-small">+ Add PDFs</button>
+    </div>
+    <div id="filelist" class="filelist"></div>
+    <div id="dropzone-empty" class="dropzone-empty" hidden>
+      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0-12 4 4m-4-4-4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      <p><strong>Drop PDF files here</strong></p>
+      <p class="muted">or click to browse</p>
+    </div>
+  </aside>
+
+  <section class="content">
+    <div id="pagegrid-toolbar" class="pagegrid-toolbar" hidden></div>
+    <div id="pagegrid" class="pagegrid"></div>
+    <div id="content-empty" class="content-empty">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+      <p>Add PDF files, then click one to preview and edit its pages.</p>
+    </div>
+  </section>
+</main>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="modal-root"></div>
+<div id="drop-overlay" class="drop-overlay" hidden>
+  <div class="drop-overlay-inner">Drop PDF files to add them</div>
+</div>
+<input type="file" id="file-input" accept=".pdf,application/pdf" multiple hidden>
+
+<script src="vendor/sortable.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

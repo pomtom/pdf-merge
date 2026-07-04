@@ -1,0 +1,59 @@
+/* Design tokens. All component CSS consumes only these variables. */
+
+:root {
+  --radius: 10px;
+  --radius-sm: 7px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --font: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --transition: 150ms ease;
+}
+
+:root[data-theme="light"] {
+  --bg: #f3f4f7;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --surface-3: #e4e7ed;
+  --text: #191c22;
+  --text-muted: #667085;
+  --accent: #4f6df5;
+  --accent-hover: #3d5ae8;
+  --accent-soft: #e8ecfe;
+  --on-accent: #ffffff;
+  --danger: #dc3d43;
+  --danger-soft: #fdebec;
+  --success: #1a9e6c;
+  --border: #dfe2e9;
+  --border-strong: #c9cdd6;
+  --shadow-1: 0 1px 3px rgba(16, 20, 30, 0.08);
+  --shadow-2: 0 6px 24px rgba(16, 20, 30, 0.12);
+  --overlay: rgba(20, 24, 32, 0.45);
+  --skeleton-a: #eceef2;
+  --skeleton-b: #f7f8fa;
+}
+
+:root[data-theme="dark"] {
+  --bg: #101217;
+  --surface: #191c23;
+  --surface-2: #21252e;
+  --surface-3: #2a2f3a;
+  --text: #e7e9ee;
+  --text-muted: #9aa1ae;
+  --accent: #6d86ff;
+  --accent-hover: #8299ff;
+  --accent-soft: #232b48;
+  --on-accent: #ffffff;
+  --danger: #e5555b;
+  --danger-soft: #3a2226;
+  --success: #35c08a;
+  --border: #2b303b;
+  --border-strong: #3a4050;
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 28px rgba(0, 0, 0, 0.5);
+  --overlay: rgba(5, 7, 10, 0.6);
+  --skeleton-a: #21252e;
+  --skeleton-b: #262b35;
+}
